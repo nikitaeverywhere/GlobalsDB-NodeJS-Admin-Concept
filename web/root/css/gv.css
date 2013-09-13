@@ -1,0 +1,32 @@
+#gv-nodesContainer {
+    position: relative;
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.gv-node {
+    position: absolute;
+    padding: 5px;
+    background: rgba(188, 236, 238, 0.84);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    vertical-align: middle;
+    text-align: center;
+    font-size: 2em;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.gv-link {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 5px;
+    background: rgba(188, 236, 238, 0.84);
+    border-top: 1px solid rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+}

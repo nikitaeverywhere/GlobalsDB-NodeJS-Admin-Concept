@@ -1,0 +1,17 @@
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    background: #eeedc8;
+}
+
+body > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.fullSized {
+    width: 100%;
+    height: 100%;
+}
