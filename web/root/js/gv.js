@@ -51,6 +51,7 @@ var gv = new function() {
 
     var Node = function(name, value, type) {
 
+        this.originalID = value + "\\" + name;
         if (value === "") {value = "<span class=\"inactive\">null</span>"}
         this.name = value;
         this.nodeName = name;
@@ -71,6 +72,7 @@ var gv = new function() {
         domElement: null,
         name: "",
         type: 1,
+        originalID: "",
         nodeName: "",
         id: -1,
         x: 0,
@@ -238,7 +240,7 @@ var gv = new function() {
             testObj.children.foreach(function(p){
                 var it = this[p];
                 var ok = true;
-                i.child.foreach(function(x){if (this[x].node.name === it.v) ok = false});
+                i.child.foreach(function(x){console.log(this[x].node.originalID,it.v + "\\" + it.n); if (this[x].node.originalID === it.v + "\\" + it.n) ok = false});
                 if (!ok) return;
                 var node = gv.createNode(it.n, it.v, it.t);
                 var d = c*Math.PI*2/n;
