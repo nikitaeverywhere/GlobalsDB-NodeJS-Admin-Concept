@@ -1,17 +1,45 @@
 #gv-nodesContainer {
     position: relative;
+    width: 10000px;
+    height: 10000px;
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    -webkit-backface-visibility: hidden;
+}
+
+#gv-container {
+    position: fixed;
+    overflow: scroll;
+}
+
+#gv-interface-namespace {
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding: 8px 12px 10px 8px;
+    border-radius: 0 0 50px/20px 0;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    cursor: pointer;
+    font-size: 1.5em;
+    /*-webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;*/
+}
+
+#gv-interface-namespace:hover {
+    color: #eeedc8;
 }
 
 .gv-node {
     position: absolute;
     padding: 5px;
-    background: rgba(188, 236, 238, 0.84);
-    border: 1px solid rgba(0, 0, 0, 0.5);
+    background: rgba(213, 125, 238, 0.83);
+    border: 1px solid rgb(0, 0, 0);
     border-radius: 50%;
     vertical-align: middle;
     text-align: center;
@@ -20,13 +48,45 @@
     text-decoration: none;
 }
 
+.gv-nodeType-0 {
+    background: rgba(238, 86, 0, 0.90);
+    border: 1px solid rgb(0, 0, 0);
+}
+
+.gv-nodeType-1 {
+    background: rgba(178, 174, 238, 0.82);
+    border: 1px solid rgb(0, 0, 0);
+}
+
+
+.gv-nodeType-2 {
+    background: rgba(188, 236, 238, 0.84);
+    border: 1px solid rgb(0, 0, 0);
+}
+
 .gv-link {
     position: absolute;
+    text-align: center;
     left: 0;
     top: 0;
     width: 0;
     height: 5px;
+    overflow: visible;
     background: rgba(188, 236, 238, 0.84);
-    border-top: 1px solid rgba(0, 0, 0, 0.5);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+    border-top: 1px solid rgb(0, 0, 0);
+    border-bottom: 1px solid rgb(0, 0, 0);
+}
+
+.gv-linkText {
+    position: relative;
+    top: -0.6em;
+    padding: 0.1em;
+    background: rgba(188, 236, 238, 1);
+    border: 1px solid black;
+    border-radius: 2px;
+    text-overflow: clip;
+    font-weight: 900;
+    /*max-width: 100%;
+    overflow: hidden;*/
+    display: inline-block;
 }

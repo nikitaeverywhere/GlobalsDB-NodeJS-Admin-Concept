@@ -56,18 +56,28 @@ module.exports = new function() {
             nodeArray.splice(0,1);
             var ro = {
                 status: "ok",
+                count: 0,
                 children: {
 
                 }
             };
+
             db.getLevel(nodeArray, function(result, data) {
                 for (var i = 0; i < data.length; i++) {
-                    ro.children[i+""] = {
-                        n: data[i],
-                        t: 1
-                    }
+                    (function(i){
+                        db.getData(nodeArray.concat(data[i]), function(result, data2) {
+                            var t = (data2.data)?2:1;
+                            ro.children[i] = {
+                                n: data[i],
+                                t: t,
+                                v: data2.data || ""
+                            };
+                            if (ro.count++ === data.length - 1) {
+                                callback.call(this, JSON.stringify(ro));
+                            }
+                        });
+                    })(i);
                 }
-                callback.call(this, JSON.stringify(ro))
             });
             //db.getLevel(["root","people","0", "name"], console.log);
 

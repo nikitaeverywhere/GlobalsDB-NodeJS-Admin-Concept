@@ -112,15 +112,14 @@ var hid = new function() {
 
         move: function(event, id, x, y) {
 
+            if (!pointer.stack[id]) return;
             var currentPointer = {
                 id: id,
                 x: x,
                 y: y,
                 state: pointer.STATES.MOVE
             };
-            pointer.principal.merge(currentPointer);
 
-            if (!pointer.stack.hasOwnProperty(id)) return;
             updatePointer(id, currentPointer);
             callBinders("move", pointer.stack[id], event);
 

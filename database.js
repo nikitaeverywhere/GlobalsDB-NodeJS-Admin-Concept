@@ -11,21 +11,35 @@ module.exports = new function() {
 
     function fillTestData() {
         if (!OPENED) return;
-            db.set("root", "people", 0, "name", "Jack");
-            db.set("root", "people", 0, "age", 25);
-            db.set("root", "people", 0, "gender", 0);
-            db.set("root", "people", 1, "name", "Henry");
-            db.set("root", "people", 1, "age", 12);
-            db.set("root", "people", 1, "gender", 0);
-            db.set("root", "people", 2, "name", "Goose");
-            db.set("root", "people", 2, "age", 2);
-            db.set("root", "people", 2, "gender", 1);
-            db.set("root", "people", 3, "name", "Olga");
-            db.set("root", "people", 3, "age", 12);
-            db.set("root", "people", 3, "gender", 1);
-            db.set("root", "loot", 0, "baggage");
-            db.set("root", "loot", 1, "message");
-            db.set("root", "loot", 2, "plant");
+        db.set("root", "2 ways");
+        db.set("root", "people", 0, "name", "Jack");
+        db.set("root", "people", 0, "age", 25);
+        db.set("root", "people", 0, "gender", 0);
+        db.set("root", "people", 1, "name", "Henry");
+        db.set("root", "people", 1, "age", 12);
+        db.set("root", "people", 1, "gender", 0);
+        db.set("root", "people", 2, "name", "Goose");
+        db.set("root", "people", 2, "age", 2);
+        db.set("root", "people", 2, "gender", 1);
+        db.set("root", "people", 2, "Goose");
+        db.set("root", "people", 3, "name", "Olga");
+        db.set("root", "people", 3, "age", 12);
+        db.set("root", "people", 3, "gender", 1);
+        db.set("root", "loot", 0, "baggage");
+        db.set("root", "loot", 1, "message");
+        db.set("root", "loot", 2, "plant");
+        db.set("root", "loot", 3, "box");
+        db.set("root", "loot", 3, "box", "9 items");
+        db.set("root", "loot", 3, "box", "9 items");
+        db.set("root", "loot", 3, "box", "item1", "knife");
+        db.set("root", "loot", 3, "box", "item2", "clock");
+        db.set("root", "loot", 3, "box", "item3", "pen");
+        db.set("root", "loot", 3, "box", "item4", "letter");
+        db.set("root", "loot", 3, "box", "item5", "egg");
+        db.set("root", "loot", 3, "box", "item6", "key");
+        db.set("root", "loot", 3, "box", "item7", "Guf");
+        db.set("root", "loot", 3, "box", "item8", "paper");
+        db.set("root", "loot", 3, "box", "item9", "wood");
         console.log( JSON.stringify(db.data({
             global: "root",
             subscripts: ["people", 0]
@@ -46,13 +60,14 @@ module.exports = new function() {
 
      */
 
-    this.getData = function(globalArray) {  // sync!
-        var global = globalArray.splice(0,1)[0];
-        var data = db.get({
+    this.getData = function(globalArray, callBack) {  // sync!
+        //console.log(globalArray);
+        var global = globalArray[0];
+        if (globalArray == undefined) {callBack.call(this); return}
+        db.get({
             global: global,
-            subscripts: globalArray
-        });
-        return data.data;
+            subscripts: globalArray.slice(1)
+        }, callBack);
     };
 
     this.getLevel = function(globalArray, callBack) {
@@ -61,8 +76,8 @@ module.exports = new function() {
             return;
         }
         db.retrieve({
-            global: globalArray.splice(0,1)[0],
-            subscripts: globalArray
+            global: globalArray[0],
+            subscripts: globalArray.slice(1)
         }, "list", callBack);
     };
 
@@ -73,6 +88,7 @@ module.exports = new function() {
             password: 'SYS',
             namespace: 'USER'})["ok"];
         if (result) OPENED = true;
+        fillTestData();
         return result;
     };
 
