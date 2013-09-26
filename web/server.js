@@ -84,6 +84,18 @@ module.exports = new function() {
         });
     };
 
+    var setGlobal = function(request, responce, callback) {
+
+        var body = "";
+        request.on('data', function (data) {
+            body += data;
+        });
+        request.on('end',function(){
+            callback.call(this, JSON.stringify({status: "ok", result: 0}));
+        });
+
+    };
+
     /**
      * Returns contents of file located in root directory or empty string if file not found.
      *
@@ -96,11 +108,19 @@ module.exports = new function() {
         var args = request.url.indexOf("?");
         var fileWebPath = request.url.substr(0,(args===-1)?request.url.length:args);
         if (fileWebPath.charAt(fileWebPath.length - 1) === "/") fileWebPath += "index.html";
-        var fileWebName = settings.app.absolutePath + "web/root" + fileWebPath,
+        var fileWebName = "web/root" + fileWebPath,
             data;
 
         if (fileWebPath === "/data") {
             getGlobal(request, response, function(data) {
+                callback.call(this, {
+                    status: 200,
+                    contentType: "application/json",
+                    body: data
+                });
+            })
+        } else if (fileWebPath === "/set") {
+            setGlobal(request, response, function(data) {
                 callback.call(this, {
                     status: 200,
                     contentType: "application/json",

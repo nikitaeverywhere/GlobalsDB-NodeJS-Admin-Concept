@@ -7,7 +7,8 @@
  */
 var gv = new function() {
 
-    var LAST_NODE_ID = 0;
+    var LAST_NODE_ID = 0,
+        LAST_LAYER = 0;
 
     this.world = {
 
@@ -23,6 +24,10 @@ var gv = new function() {
             return this.element("gv-nodesContainer");
         };
 
+        this.getContainer = function() {
+            return this.element("gv-container");
+        };
+
         this.attachLink = function(name) {
             var link = document.createElement("div");
             var linkText = document.createElement("div");
@@ -30,6 +35,7 @@ var gv = new function() {
             linkText.innerHTML = name;
             link.className = "gv-link";
             link.appendChild(linkText);
+            link.style.zIndex = LAST_LAYER;
             this.getWorld().appendChild(link);
             return link;
         };
@@ -59,7 +65,9 @@ var gv = new function() {
         this.child = {};
         this.type = (type === undefined)?1:type;
         this.x = 0;
+        this.level = 0;
         this.y = 0;
+        this.active = 0;
         this.r = 0;
         this.domElement = null;
         this.id = LAST_NODE_ID++;
@@ -75,6 +83,8 @@ var gv = new function() {
         originalID: "",
         nodeName: "",
         id: -1,
+        level: 0,
+        active: 0,
         x: 0,
         y: 0,
         r: 0,
@@ -110,9 +120,17 @@ var gv = new function() {
                 obj.physics.timer = 0;
             }
         },
+        hasChilds: function() {
+            for (var a in this.child) {
+                if (!this.child.hasOwnProperty(a)) continue;
+                return 1;
+            }
+            return 0;
+        },
         // todo check for existence
         addParent: function(node) {
             if (!this.check(node)) return;
+            this.level = node.level + 1;
             var link = dom.attachLink(this.nodeName);
             this.parent.append({
                 node: node,
@@ -123,14 +141,18 @@ var gv = new function() {
                 linkElement: link
             });
         },
+        getHTMLRoot: function() {
+
+        },
         slide: function(a, distance) { // make as light as possible
             //if (!a || !b) return;
             var b = this, dx = a.x - b.x, dy = a.y - b.y, l = Math.sqrt(dx*dx + dy*dy) - (distance) - 10;
             if (l > a.r + b.r) return; // not colliding
             var f = (a.r + b.r - l)/5, d = Math.PI/2 - Math.atan2(dx, dy),
                 fx = f*Math.cos(d), fy = f*Math.sin(d);
-            a.x += fx; b.x -= fx;
-            a.y += fy; b.y -= fy;
+            //a.x += fx; b.x -= fx;
+            //a.y += fy; b.y -= fy;
+            a.x += fx*4; a.y += fy*4;
             if (Math.abs(fx) + Math.abs(fy) > 0.001) setTimeout(function(){a.slide(b, distance)}, 25);
             a.updateView();
         },
@@ -139,6 +161,7 @@ var gv = new function() {
             this.domElement.style.left = this.x - this.r + "px";
             this.domElement.style.top = this.y - this.r + "px";
             var i = this;
+            i.domElement.style.zIndex = LAST_LAYER;
             var updateLink = function(property) {
                 var l = this[property].linkElement;
                 var o = this[property].node;
@@ -160,9 +183,12 @@ var gv = new function() {
                 l.style["transform"] = l.style["-ms-transform"] = l.style["-o-transform"] = l.style["-moz-transform"] =
                     l.style["-webkit-transform"] = "rotate("+dir+"rad)";
                 l.style.width = Math.max(len, 0) + "px";
+                l.style.opacity = Math.min(i.domElement.style.opacity, o.domElement.style.opacity) || 1;
                 l.style.left = (o.x - or*Math.cos(dir) + i.x + ir*Math.cos(dir))/2 - len/2 + "px";
                 l.style.top = (o.y - or*Math.sin(dir) + i.y + ir*Math.sin(dir))/2 - l.clientHeight/2 - 1 + "px";
+                l.style.zIndex = LAST_LAYER;
             };
+            LAST_LAYER++;
             this.child.foreach(updateLink);
             this.parent.foreach(updateLink);
         },
@@ -179,8 +205,25 @@ var gv = new function() {
             });
             this.updateView();
         },
+        _repeatClickHandler: function() {
+            // todo
+        },
         _startMoveHandler: function(pointer) {
-            var i = this;
+            var i = this,
+                level = this._parentNode.level;
+            gv.world.foreach(function(p){
+                this[p].active = false;
+                var oo = this[p].domElement.style.opacity;
+                if (this[p].level === level || this[p].level === level + 1) {
+                    this[p].domElement.style.opacity = 1;
+                } else {
+                    this[p].domElement.style.opacity = 0.2;
+                }
+                if (oo !== this[p].domElement.style.opacity) {
+                    this[p].updateView();
+                }
+            });
+            setTimeout(function(){i._parentNode.active = true}, 1);
             pointer.origX = pointer.x - i._parentNode.x;
             pointer.origY = pointer.y - i._parentNode.y;
         },
@@ -191,9 +234,12 @@ var gv = new function() {
         },
         _clickHandler: function() {
             var i = this;
+            if (i._parentNode.active && i._parentNode.hasChilds()) {
+                i._parentNode._repeatClickHandler();
+            }
             server.post("data",function(data){
                 try {eval("data = " + data)} catch(e) {}
-                i._parentNode.demo_expand(data)
+                i._parentNode.demo_expand(data);
             }, this._parentNode.getTreePath());
         },
         getTreePath: function() {
@@ -225,12 +271,16 @@ var gv = new function() {
             var sh = span.clientHeight;
             node.style.width = node.style.height = w + "px";
             span.style.marginTop = w/2 - sh/2 + "px";
+            node.style.zIndex = LAST_LAYER;
             this.r = (node.clientWidth + 2)/2;
-            hid.bindPointer("move", node, this._moveHandler);
-            hid.bindPointer("click", node, this._clickHandler);
-            hid.bindPointer("start", node, this._startMoveHandler);
+            hid.bind("pointerMove", node, this._moveHandler);
+            hid.bind("pointerPress", node, this._clickHandler);
+            hid.bind("pointerStart", node, this._startMoveHandler);
             this.domElement = node;
             this.update();
+        },
+        detachFromScene: function() {
+            // todo
         },
         demo_expand: function(testObj) {
             if (!testObj || !testObj.status || !testObj.children) return;
@@ -240,7 +290,7 @@ var gv = new function() {
             testObj.children.foreach(function(p){
                 var it = this[p];
                 var ok = true;
-                i.child.foreach(function(x){console.log(this[x].node.originalID,it.v + "\\" + it.n); if (this[x].node.originalID === it.v + "\\" + it.n) ok = false});
+                i.child.foreach(function(x){if (this[x].node.originalID === it.v + "\\" + it.n) ok = false});
                 if (!ok) return;
                 var node = gv.createNode(it.n, it.v, it.t);
                 var d = c*Math.PI*2/n;
@@ -263,9 +313,13 @@ var gv = new function() {
         if (server) server.initialize();
 
         var node = this.createNode("USER", "user", 0);
-        node.x = 300;
-        node.y = 300;
+        node.x = 3300;
+        node.y = 3300;
         node.attachToScene();
+
+        var world = dom.getContainer();
+        world.scrollLeft = 3000;
+        world.scrollTop = 3000;
 
     };
 

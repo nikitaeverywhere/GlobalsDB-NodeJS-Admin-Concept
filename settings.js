@@ -9,7 +9,7 @@ module.exports = new function() {
 
     };
     this.app = {
-        absolutePath: "Z:/ZitRos/Developing/NodeJS/GlobalsDB_interface/"
+
     };
     this.SERVER_PORT = 80;
     this.SERVER_DOMAIN = "172.27.25.133";

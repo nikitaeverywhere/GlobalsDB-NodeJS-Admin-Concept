@@ -1,45 +1,25 @@
 /**
  * Human input device wrapper object.
  *
+ * Version: 0.4
+ *
  * Required:
  *  basic.js
  */
 var hid = new function() {
 
-    var pointer = {
-        stack: {
-
-        },
-        principal: { // principal pointer holds last registered pointer data.
-            x: 0,
-            y: 0,
-            originX: 0,
-            originY: 0,
-            state: 0,
-            target: null
-        },
-        binds: {
-            start: {
+    var specVar = "!hid", // special variable name that will be handled by html-objects
+        pointer = { // pointer object
+            stack: {
 
             },
-            move: {
-
-            },
-            end: {
-
-            },
-            click: {
-
+            STATES: {
+                NONE: 0,
+                PRESS: 1,
+                MOVE: 2,
+                RELEASE: 3
             }
-        },
-        STATES: {
-            NONE: 0,
-            PRESS: 1,
-            MOVE: 2,
-            RELEASE: 3
-        },
-        pointers: 0 // number of current pointers
-    };
+        };
 
     // updates pointer
     var updatePointer = function(id, pointerObject) {
@@ -47,6 +27,7 @@ var hid = new function() {
         pointer.stack[id].merge(pointerObject);
     };
 
+    // @debug
     this.getInner = function() { return pointer };
 
     // removes pointer
@@ -64,36 +45,30 @@ var hid = new function() {
         }
     };
 
-    var Binder = function(target, handler) {
-        this.target = target;
-        this.handler = handler;
-    };
+    // call binders for event for event target and it's parents
+    var callBinders = function(eventName, currentPointer) {
 
-    /**
-     * Returns principal pointer object.
-     *
-     * @returns {*}
-     */
-    this.pointer = function() { return pointer.principal };
+        var forObject = function(object) {
+            if (object.hasOwnProperty(specVar) && object[specVar].valid) {
+                object[specVar].binds[eventName].foreach(function(prop){
+                    this[prop].call(object, currentPointer);
+                    blockEvent(currentPointer.originalEvent);
+                })
+            }
+            return object.parentNode;
+        };
 
-    var callBinders = function(eventName, currentPointer, event) {
-        var e = pointer.binds[eventName]; if (!e) return 0;
         var object = currentPointer.target;
-        while (object) {
-            e.foreach(function(property) {
-                var t = this[property].target;
-                if (t === object) {
-                    blockEvent(event);
-                    this[property].handler.call(object, currentPointer);
-                }
-            });
-            object = object.parentNode;
-        } return 1;
+        while (object) { // down recursively calling handler for every parent of target
+            object = forObject(object);
+        }
+        return 1;
+
     };
 
     var handlers = {
 
-        start: function(event, id, x, y, target) {
+        pointerStart: function(event, id, x, y, cX, cY, target) {
 
             var currentPointer = {
                 id: id,
@@ -101,44 +76,64 @@ var hid = new function() {
                 y: y,
                 originX: x,
                 originY: y,
+                pageX: x,
+                pageY: y,
+                clientX: cX,
+                clientY: cY,
+                originalEvent: event,
                 state: pointer.STATES.PRESS,
                 target: target
             };
             pointer.principal = currentPointer;
             pointer.stack[id] = currentPointer;
-            callBinders("start", currentPointer, event);
+            //console.log(currentPointer.originalEvent);
+            callBinders("pointerStart", currentPointer);
 
         },
 
-        move: function(event, id, x, y) {
+        pointerMove: function(event, id, x, y, cX, cY) {
 
             if (!pointer.stack[id]) return;
             var currentPointer = {
                 id: id,
                 x: x,
                 y: y,
+                pageX: x,
+                pageY: y,
+                clientX: cX,
+                clientY: cY,
+                originalEvent: event,
                 state: pointer.STATES.MOVE
             };
 
             updatePointer(id, currentPointer);
-            callBinders("move", pointer.stack[id], event);
+            callBinders("pointerMove", pointer.stack[id]);
 
         },
 
-        end: function(event, id, x, y) {
+        pointerEnd: function(event, id, x, y, cX, cY) {
 
             if (!pointer.stack[id]) return;
             pointer.stack[id].merge({
                 x: x,
                 y: y,
+                pageX: x,
+                pageY: y,
+                clientX: cX,
+                clientY: cY,
+                //originalEvent: event,
                 state: pointer.STATES.RELEASE
             });
             if (!pointer.stack.hasOwnProperty(id)) return;
             if (pointer.stack[id].originX === x && pointer.stack[id].originY === y) {
-                callBinders("click", pointer.stack[id], event);
+                callBinders("pointerPress", pointer.stack[id]);
             }
-            callBinders("end", pointer.stack[id], event);
+            callBinders("pointerEnd", pointer.stack[id]);
             removePointer(id);
+        },
+
+        pointerPress: function() { // todo: re-organize calls
+
         }
 
     };
@@ -146,14 +141,34 @@ var hid = new function() {
     /**
      * Binds cross-application pointer(s) event.
      *
-     * @param event
+     * @param eventName
      * @param target
      * @param handler
      */
-    this.bindPointer = function(event, target, handler) {
-        if (pointer.binds.hasOwnProperty(event)) {
-            pointer.binds[event].append(new Binder(target, handler));
-        } else console.log("No such event \"" + event + "\" for pointer.binds")
+    this.bind = function(eventName, target, handler) {
+        if (handlers.hasOwnProperty(eventName)) {
+            if (!target) {
+                console.log("Target not specified for event " + eventName);
+                return;
+            }
+            if (!target.hasOwnProperty(specVar) || !target[specVar].valid) {
+                target[specVar] = {
+                    binds: {
+                        pointerStart: {},
+                        pointerMove: {},
+                        pointerEnd: {},
+                        pointerPress: {},
+                        keyDown: {},
+                        keyUp: {},
+                        keyPress: {},
+                        hoverStart: {},
+                        hoverEnd: {}
+                    },
+                    valid: true
+                }
+            }
+            target[specVar].binds[eventName].append(handler);
+        } else console.log("No such event \"" + eventName + "\" for hid.bind")
     };
 
     /**
@@ -184,41 +199,39 @@ var hid = new function() {
         this.bindBrowserEvent('touchstart', document, function(e){
             e = fixEvent(e);
             var target = e.target || e.srcElement;
-            //blockEvent(e);
-            handlers.start(e, e.touches[e.touches.length - 1].identifier, e.touches[e.touches.length - 1].pageX,
-                e.touches[e.touches.length - 1].pageY, target);
+            var touch = e.touches[e.touches.length - 1];
+            handlers.pointerStart(e, touch.identifier, touch.pageX,
+                touch.pageY, touch.clientX, touch.clientY, target);
         });
 
         this.bindBrowserEvent('touchmove', document, function(e){
             e = fixEvent(e);
-            //blockEvent(e);
             e.changedTouches.foreach(function(el) {
-                handlers.move(e, this[el].identifier, this[el].pageX, this[el].pageY);
+                handlers.pointerMove(e, this[el].identifier, this[el].pageX, this[el].pageY, this[el].clientX, this[el].clientY);
             });
         });
 
         this.bindBrowserEvent('touchend', document, function(e){
             e = fixEvent(e);
-            //blockEvent(e);
             e.changedTouches.foreach(function(el) {
-                handlers.end(e, this[el].identifier, this[el].pageX, this[el].pageY);
+                handlers.pointerEnd(e, this[el].identifier, this[el].pageX, this[el].pageY, this[el].clientX, this[el].clientY);
             });
         });
 
         this.bindBrowserEvent('mousedown', document, function(e){
             e = fixEvent(e);
             var target = e.target || e.toElement;
-            handlers.start(e, 1, e.pageX, e.pageY, target);
+            handlers.pointerStart(e, 1, e.pageX, e.pageY, e.clientX, e.clientY, target);
         });
 
         this.bindBrowserEvent('mouseup', document, function(e){
             e = fixEvent(e);
-            handlers.end(e, 1, e.pageX, e.pageY)
+            handlers.pointerEnd(e, 1, e.pageX, e.pageY, e.clientX, e.clientY)
         });
 
         this.bindBrowserEvent('mousemove', document, function(e){
             e = fixEvent(e);
-            handlers.move(e, 1, e.pageX, e.pageY)
+            handlers.pointerMove(e, 1, e.pageX, e.pageY, e.clientX, e.clientY)
         });
 
     };

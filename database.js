@@ -2,6 +2,7 @@ module.exports = new function() {
 
     var dbModule = require("./modules/cache.node"),
         settings = require("./settings.js"),
+        fs = require("fs"), // @debug
         db = new dbModule.Cache(),
         OPENED = false;
 
@@ -9,7 +10,7 @@ module.exports = new function() {
         return db.about();
     };
 
-    function fillTestData() {
+    this.fillTestData = function() {
         if (!OPENED) return;
         db.set("root", "2 ways");
         db.set("root", "people", 0, "name", "Jack");
@@ -40,11 +41,8 @@ module.exports = new function() {
         db.set("root", "loot", 3, "box", "item7", "Guf");
         db.set("root", "loot", 3, "box", "item8", "paper");
         db.set("root", "loot", 3, "box", "item9", "wood");
-        console.log( JSON.stringify(db.data({
-            global: "root",
-            subscripts: ["people", 0]
-        }), null, '\t'));
-    }
+        console.log("Test data assigned.");
+    };
 
     /*
 
@@ -82,13 +80,14 @@ module.exports = new function() {
     };
 
     this.connect = function() {
+        var d = process.cwd(); // remember current directory
         var result = db.open({
             path: settings.db.globalsDBInstallationPath + settings.db.globalsDBDatabaseDirectory,
             username: '_SYSTEM',
             password: 'SYS',
             namespace: 'USER'})["ok"];
         if (result) OPENED = true;
-        fillTestData();
+        process.chdir(d); // restore directory because of GlobalsDB changes it
         return result;
     };
 
@@ -98,7 +97,7 @@ module.exports = new function() {
                 console.log(result);
             } else {
                 OPENED = false;
-                console.log("Disconnected from database");
+                console.log("Disconnected from database.");
             }
         })
     };

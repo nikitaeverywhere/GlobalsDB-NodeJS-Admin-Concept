@@ -30,7 +30,7 @@ var server = new function() {
             if (req.readyState == 4) { //req.statusText
 
                 if(req.status == 200) {
-                    console.log(req.responseText);
+                    //console.log(req.responseText);
                     handler.call(null,req.responseText,1);
                 } else {
                     handler.call(null,null,0);

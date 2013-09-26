@@ -1,6 +1,7 @@
 var core = new function() {
 
     var webServer = require("./web/server.js"),
+        fs = require("fs"),
         db = require("./database.js");
 
     if (!db.connect()) {
@@ -8,6 +9,7 @@ var core = new function() {
         return;
     }
 
+    db.fillTestData(); // @debug
     webServer.start();
     console.log("Application initialized successfully.");
 

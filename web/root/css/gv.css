@@ -48,6 +48,11 @@
     text-decoration: none;
 }
 
+.gv-node:hover {
+    opacity: 1 !important;
+    box-shadow: 0 0 30px yellow;
+}
+
 .gv-nodeType-0 {
     background: rgba(238, 86, 0, 0.90);
     border: 1px solid rgb(0, 0, 0);
