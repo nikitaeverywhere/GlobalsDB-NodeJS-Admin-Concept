@@ -8,3 +8,12 @@ Note that <b>modules/cache.node</b> may be corrupted because of git file encodin
 ### Installation
 
 Copy files to any directory and start from <code>admin.js</code> file. Customize url/port settings in <code>settings.js</code>. Note that application is in-development and represents only main concept, so it doesn't have security at all. Use at your own risk!
+
+### Troubleshooting
+
+Make sure that:
+* NodeJS and GlobalsDB are installed
+* You replaced basic settings in settings.js with yours
+* cache.node isn't corrupted
+
+If console throws error during startup about loading cache.node module, try to replace module file with latest module file in your GlobalsDB/bin directory. This file called like cacheXXX.node, copy and rename this file to project's /modules directory.
