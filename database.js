@@ -13,7 +13,7 @@ module.exports = new function() {
     this.fillTestData = function() {
         if (!OPENED) return;
         db.set("root", "2 ways");
-        db.set("root", "people", 0, "name", "Jack");
+        db.set("root", "people", 0, "name", "Jacksssssssssssssssssssssssssssssssssssssssssssssssssss");
         db.set("root", "people", 0, "age", 25);
         db.set("root", "people", 0, "gender", 0);
         db.set("root", "people", 1, "name", "Henry");
@@ -47,7 +47,7 @@ module.exports = new function() {
     /*
 
     global_directory() // to list globals in namespace
-    increment(g,l,o,b,*n) // to increment global value simultaneously
+    increment(g,l,o,b,*n)   // to increment global value simultaneously
     kill() / set() // to kill/set node
     lock()/unlock() // to protect
     merge({to: {}, from: {}})
@@ -86,7 +86,11 @@ module.exports = new function() {
             username: '_SYSTEM',
             password: 'SYS',
             namespace: 'USER'})["ok"];
+
         if (result) OPENED = true;
+
+        this.fillTestData(); // WARNING! COMMENT THIS LINE IF YOU HAVE ANY DATA IN YOUR DATABASE!
+
         process.chdir(d); // restore directory because of GlobalsDB changes it
         return result;
     };

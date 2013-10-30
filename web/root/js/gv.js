@@ -28,6 +28,19 @@ var gv = new function() {
             return this.element("gv-container");
         };
 
+        this.setMultipath = function(pathArray) {
+            var f = document.getElementById("gv-footer");
+            if (!f) return;
+            var gets = function(pathArray) {
+                var s = "";
+                for (var i = 0; i < pathArray.length; i++) {
+                    s += "<span class=\"gv-namespacePart\">" + pathArray[i] + "</span>";
+                }
+                return s;
+            };
+            f.innerHTML = gets(pathArray);
+        };
+
         this.attachLink = function(name) {
             var link = document.createElement("div");
             var linkText = document.createElement("div");
@@ -39,6 +52,10 @@ var gv = new function() {
             this.getWorld().appendChild(link);
             return link;
         };
+
+        this.detachLink = function(domLink) {
+            domLink.parentNode.removeChild(domLink);
+        }
 
     };
 
@@ -57,9 +74,11 @@ var gv = new function() {
 
     var Node = function(name, value, type) {
 
+        var MAX_LEN = 15;
+
         this.originalID = value + "\\" + name;
-        if (value === "") {value = "<span class=\"inactive\">null</span>"}
-        this.name = value;
+        this.name = (value.length < MAX_LEN)?value:value.substr(0, MAX_LEN)+"...";
+        if (value === "") {this.name = "<span class=\"inactive\">null</span>"}
         this.nodeName = name;
         this.parent = {};
         this.child = {};
@@ -141,7 +160,36 @@ var gv = new function() {
                 linkElement: link
             });
         },
-        getHTMLRoot: function() {
+        hasChild: function() {
+            var h = false;
+            for (var c in this.child) {
+                if (!this.child.hasOwnProperty(c)) continue;
+                h = true;
+            }
+            return h;
+        },
+        clearChildren: function() {
+            // todo
+            var recDel = function(node, a) {
+                console.log("Clearing children ", node);
+                if (node && node.hasOwnProperty("child")) {
+                    var c = node.child;
+                    for (var cc in c) {
+                        if (!c.hasOwnProperty(cc)) continue;
+                        //c[cc].linkElement.parentNode.removeChild(c[cc].linkElement);
+                        dom.detachLink(c[cc].linkElement);
+                        recDel(c[cc].node, 1);
+                    }
+                    // delete itself
+                    if (a) node.domElement.parentNode.removeChild(node.domElement);
+                    node.child = {};
+                    // todo
+                    // delete node;
+                }
+            };
+            recDel(this, 0);
+        },
+        gextHTMLRoot: function() {
 
         },
         slide: function(a, distance) { // make as light as possible
@@ -211,19 +259,21 @@ var gv = new function() {
         _startMoveHandler: function(pointer) {
             var i = this,
                 level = this._parentNode.level;
+            this._parentNode.wasActive = !!(this._parentNode.active == 1);
             gv.world.foreach(function(p){
                 this[p].active = false;
                 var oo = this[p].domElement.style.opacity;
                 if (this[p].level === level || this[p].level === level + 1) {
                     this[p].domElement.style.opacity = 1;
                 } else {
-                    this[p].domElement.style.opacity = 0.2;
+                    this[p].domElement.style.opacity = 1/((level - this[p].level + 1)*(level - this[p].level + 1));
                 }
                 if (oo !== this[p].domElement.style.opacity) {
                     this[p].updateView();
                 }
             });
             setTimeout(function(){i._parentNode.active = true}, 1);
+            dom.setMultipath(this._parentNode.getTreePath());
             pointer.origX = pointer.x - i._parentNode.x;
             pointer.origY = pointer.y - i._parentNode.y;
         },
@@ -234,13 +284,17 @@ var gv = new function() {
         },
         _clickHandler: function() {
             var i = this;
-            if (i._parentNode.active && i._parentNode.hasChilds()) {
-                i._parentNode._repeatClickHandler();
+            if (i._parentNode.hasChild() && i._parentNode.wasActive) {
+                this._parentNode.clearChildren();
+            } else {
+                if (i._parentNode.active && i._parentNode.hasChilds()) {
+                    i._parentNode._repeatClickHandler();
+                }
+                server.post("data",function(data){
+                    try {eval("data = " + data)} catch(e) {}
+                    i._parentNode.demo_expand(data);
+                }, this._parentNode.getTreePath().toString());
             }
-            server.post("data",function(data){
-                try {eval("data = " + data)} catch(e) {}
-                i._parentNode.demo_expand(data);
-            }, this._parentNode.getTreePath());
         },
         getTreePath: function() {
 
@@ -260,11 +314,12 @@ var gv = new function() {
         },
         attachToScene: function() {
             var node = document.createElement("div");
+            var MAX_LEN = 15;
             node.className = "gv-node gv-nodeType-"+this.type;
             node._parentNode = this;
             node.id = "node" + this.id;
             var span = document.createElement("div");
-            span.innerHTML = this.name;
+            span.innerHTML = this.name;//(this.name.length < MAX_LEN)?this.name:this.name.substr(0, MAX_LEN)+"...";
             dom.getWorld().appendChild(node);
             node.appendChild(span);
             var w = span.clientWidth + 10;
@@ -307,6 +362,10 @@ var gv = new function() {
         return new Node(label, value, type);
     };
 
+    this._worldScrollHandler = function(pointer) {
+        //pointer.originX = pointer.x +=
+    };
+
     this.initialize = function() {
 
         if (hid) hid.initialize();
@@ -320,6 +379,8 @@ var gv = new function() {
         var world = dom.getContainer();
         world.scrollLeft = 3000;
         world.scrollTop = 3000;
+
+        hid.bind("pointerMove", world, this._worldScrollHandler);
 
     };
 

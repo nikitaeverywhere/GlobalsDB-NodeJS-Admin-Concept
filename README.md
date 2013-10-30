@@ -1,4 +1,4 @@
-GlobalsDB-NodeJS-Admin
+GlobalsDB-NodeJS-Admin <b>concept</b>
 ======================
 
 Easy visual interface for administrating GlobalsDB. Represents database in hierarchical tree-based view - one you haven't seen before.
@@ -12,7 +12,7 @@ Copy files to any directory and start from <code>admin.js</code> file. Customize
 ### Troubleshooting
 
 Make sure that:
-* NodeJS and GlobalsDB are installed
+* NodeJS and GlobalsDB are installed and connected with NodeJS using v1 adapter (important)
 * You replaced basic settings in settings.js with yours
 * cache.node isn't corrupted
 

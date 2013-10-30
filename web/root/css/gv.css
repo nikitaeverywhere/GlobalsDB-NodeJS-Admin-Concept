@@ -12,7 +12,8 @@
 
 #gv-container {
     position: fixed;
-    overflow: scroll;
+    overflow: hidden;
+
 }
 
 #gv-interface-namespace {
@@ -33,6 +34,10 @@
 
 #gv-interface-namespace:hover {
     color: #eeedc8;
+}
+
+.gv-namespacePart:after {
+    content: " > ";
 }
 
 .gv-node {
@@ -94,4 +99,12 @@
     /*max-width: 100%;
     overflow: hidden;*/
     display: inline-block;
+}
+
+#gv-footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    padding: 5px;
 }

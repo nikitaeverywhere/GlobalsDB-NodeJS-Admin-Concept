@@ -9,7 +9,6 @@ var core = new function() {
         return;
     }
 
-    db.fillTestData(); // @debug
     webServer.start();
     console.log("Application initialized successfully.");
 
