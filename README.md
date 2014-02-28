@@ -3,6 +3,8 @@ GlobalsDB-NodeJS-Admin <b>concept</b>
 
 ##### Note: this is a <i>demo</i> application. Code (engine) will be rewritten soon.
 
+#### Update: <a href="https://github.com/ZitRos/globalsDB-Admin-NodeJS">GlobalsDB Admin released!</a>
+
 Easy visual interface for administrating GlobalsDB. Represents database in hierarchical tree-based view - one you haven't seen before.
 
 Note that <b>modules/cache.node</b> may be corrupted because of git file encoding. If NodeJS will throw error about cache.node module, download the latest one from [official site](http://www.globalsdb.org/downloads) and replace your current one.
